@@ -1,0 +1,16 @@
+# Logs
+Automator/run_log.txt
+Automator/run_daily_log.txt
+Code/logs/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Jupyter
+.ipynb_checkpoints/
+Dashboard/run_dashboard.log
+
+# ICE ETag cache (re-downloads if absent)
+Database/.ice_etags.json
