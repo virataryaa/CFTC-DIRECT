@@ -21,7 +21,8 @@ beyond what the LSEG project covers at all.
 - **`Database/`** — `cot_cit.parquet`, `cot_disagg_futopt.parquet`,
   `cot_disagg_fut.parquet`, `cot_legacy_futopt.parquet`,
   `cot_legacy_fut.parquet`.
-- **`Dashboard/`** — deliberately empty for now.
+- **`Dashboard/`** — `cot_app.py`, trimmed from `LSEG/COT_ALL` to four tabs,
+  plus `requirements.txt` and `.streamlit/config.toml`.
 
 ## Source datasets
 
@@ -231,6 +232,48 @@ Gasoil only, and the pre-ICE LIFFE softs history (2012-05 to 2014-09) sits in
 `LIFFE_COT_Hist.csv` under a different 28-column layout that this script does
 not read. `LSEG/COT_ALL` still reaches back to 2010 for these three, so it
 remains the deeper source if those four extra years matter.
+
+## Dashboard
+
+`Dashboard/cot_app.py` is derived from `COT_ALL/Dashboard/cot_app.py`, cut from
+6,146 lines to 1,824 and reduced to four tabs:
+
+| Tab | Notes |
+|---|---|
+| Recap | Change summary, historical positions, weekly change + Δ stats, OI by category, gross legs, trader counts, lots per trader |
+| Recap (Charts) | The 3×4 chart grid |
+| Concentration | Disaggregated only |
+| Old / New | Disaggregated only; not available for RC/LCC/LSU |
+
+**Every price-dependent path is removed, not just hidden.** The CFTC and ICE
+feeds publish positions only — there is no price anywhere in these parquets —
+so anything that consumed one would render blank or misleading. Gone: Rollex
+price injection, Roll Yield vs Positioning, Nominal Exposure (both the table
+and the four nominal charts), Spec Prediction, Specs in VaR, Pain Trade
+Monitor, Spec Proximity, and the combined KRC/CLC/SLS commodity views, which
+existed only to overlay two price series. Also dropped as out of scope: Spec,
+Commercial, Spreading, Correlation and CIT vs Disagg.
+
+The loaders drop the `Px` column outright, so the handful of surviving
+`if "Px" in d.columns` guards short-circuit and no price plumbing can quietly
+come back to life.
+
+Removing the four nominal charts leaves a few empty cells in the 3-wide chart
+grid on the Recap (Charts) tab. That is cosmetic and deliberate — the
+alternative was reflowing a grid whose cell positions are referenced by name.
+
+Verified with Streamlit's `AppTest`: the app runs with **zero exceptions** for
+KC (CIT + Disagg), CC, GC and the ICE-sourced RC and LCC.
+
+### Deploying
+
+Repo: `https://github.com/virataryaa/CFTC-DIRECT`
+
+On Streamlit Cloud, point the app at **`Dashboard/cot_app.py`** on `main`.
+`requirements.txt` sits at both the repo root and next to the app. The
+parquets are committed (~27 MB total), and `DB_DIR` resolves to
+`<repo>/Database`, so the deployed app reads them directly with no external
+data source. Re-run the ingests and push `Database/` to refresh the site.
 
 ## Running it
 
